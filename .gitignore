@@ -35,3 +35,7 @@
 /lcov/
 /src
 /mapfile
+tags
+SI
+.cproject
+.project
