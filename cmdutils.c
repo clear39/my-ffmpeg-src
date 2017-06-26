@@ -443,8 +443,7 @@ int parse_optgroup(void *optctx, OptionGroup *g)
     return 0;
 }
 
-int locate_option(int argc, char **argv, const OptionDef *options,
-                  const char *optname)
+int locate_option(int argc, char **argv, const OptionDef *options,const char *optname)
 {
     const OptionDef *po;
     int i;
