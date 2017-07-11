@@ -220,8 +220,9 @@ static const OptionDef *find_option(const OptionDef *po, const char *name)
     int len = p ? p - name : strlen(name);
 
     while (po->name) {
-        if (!strncmp(name, po->name, len) && strlen(po->name) == len)
+        if (!strncmp(name, po->name, len) && strlen(po->name) == len){
             break;
+        }
         po++;
     }
     return po;
@@ -442,7 +443,9 @@ int parse_optgroup(void *optctx, OptionGroup *g)
 
     return 0;
 }
-
+/**
+ * 根据options数组 查找argv中是否有optname参数
+ */
 int locate_option(int argc, char **argv, const OptionDef *options,const char *optname)
 {
     const OptionDef *po;
@@ -451,19 +454,22 @@ int locate_option(int argc, char **argv, const OptionDef *options,const char *op
     for (i = 1; i < argc; i++) {
         const char *cur_opt = argv[i];
 
-        if (*cur_opt++ != '-')
+        if (*cur_opt++ != '-'){
             continue;
+        }
 
         po = find_option(options, cur_opt);
-        if (!po->name && cur_opt[0] == 'n' && cur_opt[1] == 'o')
+        if (!po->name && cur_opt[0] == 'n' && cur_opt[1] == 'o'){
             po = find_option(options, cur_opt + 2);
+        }
 
-        if ((!po->name && !strcmp(cur_opt, optname)) ||
-             (po->name && !strcmp(optname, po->name)))
+        if ((!po->name && !strcmp(cur_opt, optname)) ||(po->name && !strcmp(optname, po->name))){
             return i;
+        }
 
-        if (!po->name || po->flags & HAS_ARG)
+        if (!po->name || po->flags & HAS_ARG){
             i++;
+        }
     }
     return 0;
 }
@@ -495,23 +501,32 @@ static void dump_argument(const char *a)
 static void check_options(const OptionDef *po)
 {
     while (po->name) {
-        if (po->flags & OPT_PERFILE)
+        if (po->flags & OPT_PERFILE){
             av_assert0(po->flags & (OPT_INPUT | OPT_OUTPUT));
+        }
         po++;
     }
 }
 
 void parse_loglevel(int argc, char **argv, const OptionDef *options)
 {
+   /**
+	 * 根据options数组 查找argv中是否有loglevel参数
+	 * idx 为loglevel在argv中的索引
+	 */
     int idx = locate_option(argc, argv, options, "loglevel");
     const char *env;
 
     check_options(options);
 
-    if (!idx)
+    if (!idx){
         idx = locate_option(argc, argv, options, "v");
-    if (idx && argv[idx + 1])
+    }
+
+    if (idx && argv[idx + 1]){
         opt_loglevel(NULL, "loglevel", argv[idx + 1]);
+    }
+
     idx = locate_option(argc, argv, options, "report");
     if ((env = getenv("FFREPORT")) || idx) {
         init_report(env);
@@ -526,8 +541,9 @@ void parse_loglevel(int argc, char **argv, const OptionDef *options)
         }
     }
     idx = locate_option(argc, argv, options, "hide_banner");
-    if (idx)
+    if (idx){
         hide_banner = 1;
+    }
 }
 
 static const AVOption *opt_find(void *obj, const char *name, const char *unit,

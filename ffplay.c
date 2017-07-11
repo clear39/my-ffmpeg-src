@@ -2749,8 +2749,7 @@ static int read_thread(void *arg)
     av_freep(&opts);
 
     if (err < 0) {
-        av_log(NULL, AV_LOG_WARNING,
-               "%s: could not find codec parameters\n", is->filename);
+        av_log(NULL, AV_LOG_WARNING, "%s: could not find codec parameters\n", is->filename);
         ret = -1;
         goto fail;
     }
@@ -3649,8 +3648,7 @@ int main(int argc, char **argv)
     if (!input_filename) {
         show_usage();
         av_log(NULL, AV_LOG_FATAL, "An input file must be specified\n");
-        av_log(NULL, AV_LOG_FATAL,
-               "Use -h to get full help or, even better, run 'man %s'\n", program_name);
+        av_log(NULL, AV_LOG_FATAL,"Use -h to get full help or, even better, run 'man %s'\n", program_name);
         exit(1);
     }
 
@@ -3658,16 +3656,18 @@ int main(int argc, char **argv)
         video_disable = 1;
     }
     flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER;
-    if (audio_disable)
+    if (audio_disable){
         flags &= ~SDL_INIT_AUDIO;
-    else {
+    }else {
         /* Try to work around an occasional ALSA buffer underflow issue when the
          * period size is NPOT due to ALSA resampling by forcing the buffer size. */
-        if (!SDL_getenv("SDL_AUDIO_ALSA_SET_BUFFER_SIZE"))
+        if (!SDL_getenv("SDL_AUDIO_ALSA_SET_BUFFER_SIZE")){
             SDL_setenv("SDL_AUDIO_ALSA_SET_BUFFER_SIZE","1", 1);
+        }
     }
-    if (display_disable)
+    if (display_disable){
         flags &= ~SDL_INIT_VIDEO;
+    }
     if (SDL_Init (flags)) {
         av_log(NULL, AV_LOG_FATAL, "Could not initialize SDL - %s\n", SDL_GetError());
         av_log(NULL, AV_LOG_FATAL, "(Did you set the DISPLAY variable?)\n");
