@@ -292,13 +292,11 @@ static inline void prepare_app_arguments(int *argc_ptr, char ***argv_ptr)
 }
 #endif /* HAVE_COMMANDLINETOARGVW */
 
-static int write_option(void *optctx, const OptionDef *po, const char *opt,
-                        const char *arg)
+static int write_option(void *optctx, const OptionDef *po, const char *opt,const char *arg)
 {
     /* new-style options contain an offset into optctx, old-style address of
      * a global var*/
-    void *dst = po->flags & (OPT_OFFSET | OPT_SPEC) ?
-                (uint8_t *)optctx + po->u.off : po->u.dst_ptr;
+    void *dst = po->flags & (OPT_OFFSET | OPT_SPEC) ?(uint8_t *)optctx + po->u.off : po->u.dst_ptr;
     int *dstcount;
 
     if (po->flags & OPT_SPEC) {
@@ -347,8 +345,7 @@ static int write_option(void *optctx, const OptionDef *po, const char *opt,
     return 0;
 }
 
-int parse_option(void *optctx, const char *opt, const char *arg,
-                 const OptionDef *options)
+int parse_option(void *optctx, const char *opt, const char *arg,const OptionDef *options)
 {
     const OptionDef *po;
     int ret;
@@ -357,13 +354,17 @@ int parse_option(void *optctx, const char *opt, const char *arg,
     if (!po->name && opt[0] == 'n' && opt[1] == 'o') {
         /* handle 'no' bool option */
         po = find_option(options, opt + 2);
-        if ((po->name && (po->flags & OPT_BOOL)))
+        if ((po->name && (po->flags & OPT_BOOL))){
             arg = "0";
-    } else if (po->flags & OPT_BOOL)
+        }
+    } else if (po->flags & OPT_BOOL){
         arg = "1";
+    }
 
-    if (!po->name)
+    if (!po->name){
         po = find_option(options, "default");
+    }
+
     if (!po->name) {
         av_log(NULL, AV_LOG_ERROR, "Unrecognized option '%s'\n", opt);
         return AVERROR(EINVAL);
@@ -380,8 +381,7 @@ int parse_option(void *optctx, const char *opt, const char *arg,
     return !!(po->flags & HAS_ARG);
 }
 
-void parse_options(void *optctx, int argc, char **argv, const OptionDef *options,
-                   void (*parse_arg_function)(void *, const char*))
+void parse_options(void *optctx, int argc, char **argv, const OptionDef *options,void (*parse_arg_function)(void *, const char*))
 {
     const char *opt;
     int optindex, handleoptions = 1, ret;
@@ -401,12 +401,14 @@ void parse_options(void *optctx, int argc, char **argv, const OptionDef *options
             }
             opt++;
 
-            if ((ret = parse_option(optctx, opt, argv[optindex], options)) < 0)
+            if ((ret = parse_option(optctx, opt, argv[optindex], options)) < 0){
                 exit_program(1);
+            }
             optindex += ret;
         } else {
-            if (parse_arg_function)
+            if (parse_arg_function){
                 parse_arg_function(optctx, opt);
+            }
         }
     }
 }
@@ -454,6 +456,7 @@ int locate_option(int argc, char **argv, const OptionDef *options,const char *op
     for (i = 1; i < argc; i++) {
         const char *cur_opt = argv[i];
 
+        //如果没有'-'直接跳过参数
         if (*cur_opt++ != '-'){
             continue;
         }
@@ -901,11 +904,12 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
     int i;
 
     flags = av_log_get_flags();
-    tail = strstr(arg, "repeat");
-    if (tail)
+    tail = strstr(arg, "repeat");//找到repeat字符
+    if (tail){
         flags &= ~AV_LOG_SKIP_REPEATED;
-    else
+    }else{
         flags |= AV_LOG_SKIP_REPEATED;
+    }
 
     av_log_set_flags(flags);
     if (tail == arg)
@@ -920,10 +924,9 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
         }
     }
 
-    level = strtol(arg, &tail, 10);
+    level = strtol(arg, &tail, 10);//convert a string to a long integer
     if (*tail) {
-        av_log(NULL, AV_LOG_FATAL, "Invalid loglevel \"%s\". "
-               "Possible levels are numbers or:\n", arg);
+        av_log(NULL, AV_LOG_FATAL, "Invalid loglevel \"%s\". "  "Possible levels are numbers or:\n", arg);
         for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++)
             av_log(NULL, AV_LOG_FATAL, "\"%s\"\n", log_levels[i].name);
         exit_program(1);
@@ -1098,13 +1101,10 @@ static int warned_cfg = 0;
             const char *cfg = libname##_configuration();                \
             if (strcmp(FFMPEG_CONFIGURATION, cfg)) {                    \
                 if (!warned_cfg) {                                      \
-                    av_log(NULL, level,                                 \
-                            "%sWARNING: library configuration mismatch\n", \
-                            indent);                                    \
+                    av_log(NULL, level,"%sWARNING: library configuration mismatch\n",indent);                                    \
                     warned_cfg = 1;                                     \
                 }                                                       \
-                av_log(NULL, level, "%s%-11s configuration: %s\n",      \
-                        indent, #libname, cfg);                         \
+                av_log(NULL, level, "%s%-11s configuration: %s\n", indent, #libname, cfg);                         \
             }                                                           \
         }                                                               \
     }                                                                   \
@@ -1127,12 +1127,12 @@ static void print_program_info(int flags, int level)
     const char *indent = flags & INDENT? "  " : "";
 
     av_log(NULL, level, "%s version " FFMPEG_VERSION, program_name);
-    if (flags & SHOW_COPYRIGHT)
-        av_log(NULL, level, " Copyright (c) %d-%d the FFmpeg developers",
-               program_birth_year, CONFIG_THIS_YEAR);
+    if (flags & SHOW_COPYRIGHT){
+    	av_log(NULL, level, " Copyright (c) %d-%d the FFmpeg developers",program_birth_year, CONFIG_THIS_YEAR);
+    }
+
     av_log(NULL, level, "\n");
     av_log(NULL, level, "%sbuilt with %s\n", indent, CC_IDENT);
-
     av_log(NULL, level, "%sconfiguration: " FFMPEG_CONFIGURATION "\n", indent);
 }
 
@@ -1165,8 +1165,9 @@ static void print_buildconf(int flags, int level)
 void show_banner(int argc, char **argv, const OptionDef *options)
 {
     int idx = locate_option(argc, argv, options, "version");
-    if (hide_banner || idx)
+    if (hide_banner || idx){
         return;
+    }
 
     print_program_info (INDENT|SHOW_COPYRIGHT, AV_LOG_INFO);
     print_all_libs_info(INDENT|SHOW_CONFIG,  AV_LOG_INFO);

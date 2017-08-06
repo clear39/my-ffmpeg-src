@@ -54,6 +54,7 @@ static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
 static int av_log_level = AV_LOG_INFO;
+//flags 的作用暂时不知道
 static int flags;
 
 #define NB_LEVELS 8
@@ -329,8 +330,7 @@ void av_log_default_callback(void* ptr, int level, const char* fmt, va_list vl)
         is_atty = isatty(2) ? 1 : -1;
 #endif
 
-    if (print_prefix && (flags & AV_LOG_SKIP_REPEATED) && !strcmp(line, prev) &&
-        *line && line[strlen(line) - 1] != '\r'){
+    if (print_prefix && (flags & AV_LOG_SKIP_REPEATED) && !strcmp(line, prev) && *line && line[strlen(line) - 1] != '\r'){
         count++;
         if (is_atty == 1)
             fprintf(stderr, "    Last message repeated %d times\r", count);
@@ -361,8 +361,7 @@ end:
 #endif
 }
 
-static void (*av_log_callback)(void*, int, const char*, va_list) =
-    av_log_default_callback;
+static void (*av_log_callback)(void*, int, const char*, va_list) =  av_log_default_callback;
 
 void av_log(void* avcl, int level, const char *fmt, ...)
 {
