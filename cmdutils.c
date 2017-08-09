@@ -481,10 +481,10 @@ static void dump_argument(const char *a)
 {
     const unsigned char *p;
 
-    for (p = a; *p; p++)
-        if (!((*p >= '+' && *p <= ':') || (*p >= '@' && *p <= 'Z') ||
-              *p == '_' || (*p >= 'a' && *p <= 'z')))
+    for (p = a; *p; p++){
+        if (!((*p >= '+' && *p <= ':') || (*p >= '@' && *p <= 'Z') || *p == '_' || (*p >= 'a' && *p <= 'z')))
             break;
+    }
     if (!*p) {
         fputs(a, report_file);
         return;
@@ -513,7 +513,7 @@ static void check_options(const OptionDef *po)
 
 void parse_loglevel(int argc, char **argv, const OptionDef *options)
 {
-   /**
+   /** -loglevel
 	 * 根据options数组 查找argv中是否有loglevel参数
 	 * idx 为loglevel在argv中的索引
 	 */
@@ -523,13 +523,23 @@ void parse_loglevel(int argc, char **argv, const OptionDef *options)
     check_options(options);
 
     if (!idx){
+    	/**
+    	 * -v
+    	 * 如果未能找到loglevel，再查找是否有v参数
+    	 */
         idx = locate_option(argc, argv, options, "v");
     }
 
     if (idx && argv[idx + 1]){
+    	/**
+    	 * 设置loglevel 参数
+    	 */
         opt_loglevel(NULL, "loglevel", argv[idx + 1]);
     }
 
+    /**
+     *-report   generate a report
+     */
     idx = locate_option(argc, argv, options, "report");
     if ((env = getenv("FFREPORT")) || idx) {
         init_report(env);
@@ -543,6 +553,10 @@ void parse_loglevel(int argc, char **argv, const OptionDef *options)
             fflush(report_file);
         }
     }
+
+    /**
+     * -hide_banner hide_banner  do not show program banner
+     */
     idx = locate_option(argc, argv, options, "hide_banner");
     if (idx){
         hide_banner = 1;
@@ -904,7 +918,7 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
     int i;
 
     flags = av_log_get_flags();
-    tail = strstr(arg, "repeat");//找到repeat字符
+    tail = strstr(arg, "repeat");//查找是否有repeat字符
     if (tail){
         flags &= ~AV_LOG_SKIP_REPEATED;
     }else{
@@ -917,6 +931,9 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
     if(tail && !*arg)
         return 0;
 
+    /**
+     * 如果loglevel是字符串，转化成对应level
+     */
     for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++) {
         if (!strcmp(log_levels[i].name, arg)) {
             av_log_set_level(log_levels[i].level);
@@ -924,11 +941,22 @@ int opt_loglevel(void *optctx, const char *opt, const char *arg)
         }
     }
 
+
+    /**
+    * 如果loglevel不是字符串，转化成对应level
+    *
+    *
+    * long int strtol(const char *nptr,char **endptr,int base);
+    * 参数base范围从2至36，或0。参数base代表采用的进制方式，如base值为10则采用10进制，若base值为16则采用16进制等。当base值为0时则是采用10进制做转换，但遇到如’0x’前置字符则会使用16进制做转换、遇到’0’前置字符而不是’0x’的时候会使用8进制做转换。
+    *一开始strtol()会扫描参数nptr字符串，跳过前面的空格字符，直到遇上数字或正负符号才开始做转换，再遇到非数字或字符串结束时('\0')结束转换，并将结果返回。
+    * 若参数endptr不为NULL，则会将遇到不合条件而终止的nptr中的字符指针由endptr返回；若参数endptr为NULL，则会不返回非法字符串
+     */
     level = strtol(arg, &tail, 10);//convert a string to a long integer
     if (*tail) {
         av_log(NULL, AV_LOG_FATAL, "Invalid loglevel \"%s\". "  "Possible levels are numbers or:\n", arg);
-        for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++)
+        for (i = 0; i < FF_ARRAY_ELEMS(log_levels); i++){
             av_log(NULL, AV_LOG_FATAL, "\"%s\"\n", log_levels[i].name);
+        }
         exit_program(1);
     }
     av_log_set_level(level);
@@ -979,10 +1007,9 @@ static int init_report(const char *env)
 
     while (env && *env) {
         if ((ret = av_opt_get_key_value(&env, "=", ":", 0, &key, &val)) < 0) {
-            if (count)
-                av_log(NULL, AV_LOG_ERROR,
-                       "Failed to parse FFREPORT environment variable: %s\n",
-                       av_err2str(ret));
+            if (count){
+                av_log(NULL, AV_LOG_ERROR,"Failed to parse FFREPORT environment variable: %s\n",av_err2str(ret));
+            }
             break;
         }
         if (*env)
@@ -1007,8 +1034,7 @@ static int init_report(const char *env)
     }
 
     av_bprint_init(&filename, 0, 1);
-    expand_filename_template(&filename,
-                             av_x_if_null(filename_template, "%p-%t.log"), tm);
+    expand_filename_template(&filename,av_x_if_null(filename_template, "%p-%t.log"), tm);
     av_free(filename_template);
     if (!av_bprint_is_complete(&filename)) {
         av_log(NULL, AV_LOG_ERROR, "Out of memory building report file name\n");
@@ -1018,18 +1044,12 @@ static int init_report(const char *env)
     report_file = fopen(filename.str, "w");
     if (!report_file) {
         int ret = AVERROR(errno);
-        av_log(NULL, AV_LOG_ERROR, "Failed to open report \"%s\": %s\n",
-               filename.str, strerror(errno));
+        av_log(NULL, AV_LOG_ERROR, "Failed to open report \"%s\": %s\n",filename.str, strerror(errno));
         return ret;
     }
     av_log_set_callback(log_callback_report);
-    av_log(NULL, AV_LOG_INFO,
-           "%s started on %04d-%02d-%02d at %02d:%02d:%02d\n"
-           "Report written to \"%s\"\n",
-           program_name,
-           tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
-           tm->tm_hour, tm->tm_min, tm->tm_sec,
-           filename.str);
+    av_log(NULL, AV_LOG_INFO,"%s started on %04d-%02d-%02d at %02d:%02d:%02d\n" "Report written to \"%s\"\n",
+           program_name,tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,tm->tm_hour, tm->tm_min, tm->tm_sec,filename.str);
     av_bprint_finalize(&filename, NULL);
     return 0;
 }

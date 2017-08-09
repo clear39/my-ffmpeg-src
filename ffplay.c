@@ -3627,7 +3627,7 @@ int main(int argc, char **argv)
      */
     av_log_set_flags(AV_LOG_SKIP_REPEATED);
     /**
-     * 解析参数中的日志等级
+     * 解析参数中的日志等级,以及添加-report存储日志到文件
      */
     parse_loglevel(argc, argv, options);
 
